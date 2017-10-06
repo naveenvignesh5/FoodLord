@@ -52,8 +52,6 @@ topics <- data.frame(date=as.Date(tweets.df$created), topic=topics)
 
 ggplot(topics, aes(date, fill = term[topic])) +geom_density(position = "stack")
 
-( corp_sub <- tm_filter(myCorpus, function(x) any(grep("chicken", content(x), fixed=TRUE))) )
-
 #code to plot sentiment
 sentiments <- sentiment(tweets.df$text)
 table(sentiments$polarity)
@@ -65,5 +63,4 @@ sentiments$score[sentiments$polarity == "negative"] <- -1
 sentiments$date <- as.Date(tweets.df$created)
 result <- aggregate(score ~ date, data = sentiments, sum)
 print(result)
-
 
