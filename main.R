@@ -87,6 +87,7 @@ sentiments$score <- 0
 sentiments$score[sentiments$polarity == "positive"] <- 1
 sentiments$score[sentiments$polarity == "negative"] <- -1
 sentiments$date <- as.Date(tweets.df$created)
-result <- aggregate(score ~ date, data = sentiments, sum)
+#result <- aggregate(score ~ date, data = sentiments, sum)
 
-#code to 
+source("twitterMap.R")
+twitterMap("@narendramodi",fileName ="abc.pdf",nMax = 100)
