@@ -19,17 +19,17 @@ setup_twitter_oauth(apiKey,apiSecret,access_token,access_token_secret)
 
 #twitter search parameters
 searchString <- c('#indianfood')
-no <- 100
+no <- 200
 lang <- "en"
+tweets <- searchTwitter(searchString,no,lang,since = "2017-10-05",until = "2017-10-07")
 
-tweets <- searchTwitter(searchString,no,lang,since = "2017-10-04",until = "2017-10-06")
 tweets.df <- twListToDF(tweets)
 myCorpus <- Corpus(VectorSource(tweets.df$text)) #corpus for documents
 
 myCorpus <- tm_map(myCorpus,removePunctuation)
 myCorpus <- tm_map(myCorpus,content_transformer(tolower))
 myCorpus <- tm_map(myCorpus,removeWords,stopwords("english"))
-myCorpus <- tm_map(myCorpus, removeWords, c("like", "video","agirlfromodisha","foodi","travel"))
+myCorpus <- tm_map(myCorpus, removeWords, c("like", "video"))
 myCorpus <- tm_map(myCorpus, stripWhitespace)
 myCorpus <- tm_map(myCorpus, stemDocument)
 
@@ -43,8 +43,6 @@ set.seed(1234)
 pal <- brewer.pal(9,"BuGn")[-(1:4)]
 wordcloud(words = d$word, freq = d$freq, min.freq = 5,max.words=200, random.order=FALSE, rot.per=0.35, colors=brewer.pal(8, "Dark2"))
 
-
-
 #segration of tweets based on a twitter code
 
 f = list()
@@ -55,20 +53,22 @@ AddItemNaive <- function(item)
   .GlobalEnv$f[[length(.GlobalEnv$Result)+1]] <- item
 }
 
+#food item to be isolated
+foodItem <- c("naan")
 #loop through each document
 for(i in 1:length(myCorpus)) {
   #condition to check if document matches content
   temp1 <- unlist(strsplit(toString(myCorpus[[i]]$content),split=" "))
-  if("crab" %in% temp1) {
+  if((foodItem %in% temp1) || (foodItem %in% temp1)) {
     #if satisfied add then add the text sentence to new corpus
     AddItemNaive(myCorpus[[i]]$content)
+    print(myCorpus[[i]]$content)
   }
   temp1 <- NULL
 }
 
 foodCorpus <- as.VCorpus(f)
-print(foodCorpus$content)
-
+print(foodCorpus)
 #topic modelling terms part
 dtm <- as.DocumentTermMatrix(tdm)
 lda <- LDA(dtm,k=8)
@@ -79,15 +79,27 @@ topics <- data.frame(date=as.Date(tweets.df$created), topic=topics)
 ggplot(topics, aes(date, fill = term[topic])) +geom_density(position = "stack")
 
 #code to plot sentiment
-sentiments <- sentiment(tweets.df$text)
+sentiments <- sentiment(foodCorpus$content)
+print(foodCorpus$content)
+
 table(sentiments$polarity)
+
 
 #create sentiments of scores
 sentiments$score <- 0
 sentiments$score[sentiments$polarity == "positive"] <- 1
 sentiments$score[sentiments$polarity == "negative"] <- -1
-sentiments$date <- as.Date(tweets.df$created)
 #result <- aggregate(score ~ date, data = sentiments, sum)
 
-source("twitterMap.R")
-twitterMap("@narendramodi",fileName ="abc.pdf",nMax = 100)
+
+# select top retweeted tweets
+selected <- which(tweets.df$retweetCount >= 9)
+# plot them
+dates <- strptime(tweets.df$created, format="%Y-%m-%d")
+plot(x=dates, y=tweets.df$retweetCount, type="b", col="grey",
+     xlab="Date", ylab="Times retweeted")
+colors <- rainbow(10)[1:length(selected)]
+points(dates[selected], tweets.df$retweetCount[selected],
+       pch=19, col=colors)
+text(dates[selected], tweets.df$retweetCount[selected],
+     tweets.df$text[selected], col=colors, cex=.9)

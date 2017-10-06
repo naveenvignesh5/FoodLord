@@ -21,11 +21,11 @@ setup_twitter_oauth(apiKey,apiSecret,access_token,access_token_secret)
 #######
 # Step 2: Download the Followers of a Given Twitter Account
 #######
-lucaspuente <- getUser("narendramodi")
+lucaspuente <- getUser("naveen_theace56")
 #See this user's location:
 location(lucaspuente)
 #Download data on this user's followers:
-lucaspuente_follower_IDs<-lucaspuente$getFollowers(retryOnRateLimit=180)
+lucaspuente_follower_IDs<-lucaspuente$getFollowers(retryOnRateLimit=10)
 length(lucaspuente_follower_IDs)
 #######
 # Step 3: Organize the data you've just collected:
