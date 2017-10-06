@@ -64,5 +64,6 @@ sentiments$score[sentiments$polarity == "positive"] <- 1
 sentiments$score[sentiments$polarity == "negative"] <- -1
 sentiments$date <- as.Date(tweets.df$created)
 result <- aggregate(score ~ date, data = sentiments, sum)
-plot(result, type = "l")
+print(result)
+
 
