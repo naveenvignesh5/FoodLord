@@ -43,15 +43,31 @@ set.seed(1234)
 pal <- brewer.pal(9,"BuGn")[-(1:4)]
 wordcloud(words = d$word, freq = d$freq, min.freq = 5,max.words=200, random.order=FALSE, rot.per=0.35, colors=brewer.pal(8, "Dark2"))
 
+
+
 #segration of tweets based on a twitter code
+
+f = list()
+
+#function to add to list
+AddItemNaive <- function(item)
+{
+  .GlobalEnv$f[[length(.GlobalEnv$Result)+1]] <- item
+}
 
 #loop through each document
 for(i in 1:length(myCorpus)) {
   #condition to check if document matches content
-  if(pmatch(toString(myCorpus[[i]]$content),c("chicken")) > 0) {
-    print(c("matches",i))
+  temp1 <- unlist(strsplit(toString(myCorpus[[i]]$content),split=" "))
+  if("crab" %in% temp1) {
+    #if satisfied add then add the text sentence to new corpus
+    AddItemNaive(myCorpus[[i]]$content)
   }
+  temp1 <- NULL
 }
+
+foodCorpus <- as.VCorpus(f)
+print(foodCorpus$content)
 
 #topic modelling terms part
 dtm <- as.DocumentTermMatrix(tdm)
@@ -73,3 +89,4 @@ sentiments$score[sentiments$polarity == "negative"] <- -1
 sentiments$date <- as.Date(tweets.df$created)
 result <- aggregate(score ~ date, data = sentiments, sum)
 
+#code to 
