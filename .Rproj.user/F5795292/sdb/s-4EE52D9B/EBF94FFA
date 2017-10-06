@@ -1,0 +1,21 @@
+{
+    "collab_server" : "",
+    "contents" : "#importing libraries\nlibrary(twitteR)\nlibrary(ROAuth)\nlibrary(tm)\nlibrary(xlsx)\nlibrary(plyr)\nlibrary(stringr)\n\n#Twitter Credentials\napiKey <- 'OY9AlUG1fM49rytP7T8hqInoL'\napiSecret <- 'cjKBprKRaZoUUvwPUv7MX3NeRCehn8dSs9vBOwGjsbvAXBjI9s'\naccess_token <- '2195494530-V7csBiOqiffi69fZuhkZEqMRZO5xqHHWcSiBl9V'\naccess_token_secret <- 'CQ96GaCgeIFqq2XVPtigJnFVD9momtZqFBEsHpH8n7q3Z'\n\n#setting up twitter third party authentication\nsetup_twitter_oauth(apiKey,apiSecret,access_token,access_token_secret)\n\n#retriving twitter based on hashtags \nfoodData <- searchTwitter('')",
+    "created" : 1507267089301.000,
+    "dirty" : true,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3656568278",
+    "id" : "EBF94FFA",
+    "lastKnownWriteTime" : 1507269508,
+    "last_content_update" : 1507269526456,
+    "path" : "D://foodlord/main.R",
+    "project_path" : "main.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
