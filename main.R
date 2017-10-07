@@ -20,8 +20,8 @@ access_token_secret <- 'CQ96GaCgeIFqq2XVPtigJnFVD9momtZqFBEsHpH8n7q3Z'
 setup_twitter_oauth(apiKey,apiSecret,access_token,access_token_secret)
 
 #------------------------TWITTER SEARCH PARAMETERS---------------------
-searchString <- c("#indianfood")
-no <- 2000
+searchString <- c("#indianfood","@worldfoodindia")
+no <- 3000
 lang <- "en"
 tweets <- searchTwitter(searchString,no,lang,since = "2017-10-01",until = "2017-10-07")
 
@@ -72,7 +72,8 @@ for(i in 1:length(myCorpus)) {
   temp1 <- NULL
 }
 
-foodCorpus <- as.VCorpus(f)
+foodCorpus <- as.VCorpus(f) #corpus to used for sentiment analysis
+
 print(foodCorpus)
 #topic modelling terms part
 dtm <- as.DocumentTermMatrix(tdm)
@@ -99,6 +100,8 @@ sentiments$score[sentiments$polarity == "negative"] <- -1
 selected <- which(tweets.df$retweetCount >= 15)
 # plot them
 dates <- strptime(tweets.df$created, format="%Y-%m-%d")
+
+#plot 1 for twitter data
 plot(x=dates, y=tweets.df$retweetCount, type="l", col="grey",
      xlab="Date", ylab="Times retweeted")
 colors <- rainbow(10)[1:length(selected)]
@@ -107,10 +110,16 @@ points(dates[selected], tweets.df$retweetCount[selected],
 text(dates[selected], tweets.df$retweetCount[selected],
      tweets.df$text[selected], col=colors, cex=.9)
 
-# ---------------------- ASSOCIATION OF TWEETS ------------------------
-tdm <- tdm[names(tail(sort(rowSums(as.matrix(tdm))), 50)) ]
+#plot 2 
+#data = head(selected,dates)
+#ggplot(data,aes(x=Times-Retweeted,y=Date))+geom_point()+geom_text(label=tweets.df$retweetCount[selected],
+ #                                                                 nudge_x = 0.25,nudge_y = 0.25,check_overlap = T)
 
-m <- as.matrix(tdm)
+# ---------------------- ASSOCIATION OF TWEETS ------------------------
+
+#plot 1 - association
+m <- as.matrix(removeSparseTerms(tdm,.96))
+print(m)
 m[m>=1] <- 1
 m <- m %*% t(m)
 
@@ -123,3 +132,4 @@ V(g)$degree <- degree(g)
 set.seed(3952)
 network <- layout.fruchterman.reingold(g)
 plot(g,layout=network)
+
