@@ -19,9 +19,9 @@ foodItem <- c("chicken")
 foodItem1 <- c("naan")
 foodItem2 <- c("curri")
 
-#twitter parameters to be used
-searchString <- c("#indianfood",foodItem,foodItem1,foodItem2)
-no <- 3000
+#twitter parameters to be used - #indianfood
+searchString <- c("#indianhack",foodItem,foodItem1,foodItem2)
+no <- 12000
 lang <- "en"
 
 #---------------------------TWITTER CREDENTIALS----------------------
@@ -37,7 +37,7 @@ setup_twitter_oauth(apiKey,apiSecret,access_token,access_token_secret)
 
 #------------------------TWITTER SEARCH---------------------
 
-tweets <- searchTwitter(searchString,no,lang,since = "2017-10-01",until = "2017-10-07")
+tweets <- searchTwitter(searchString,no,lang,since = "2017-9-30",until = "2017-10-07")
 
 tweets.df <- twListToDF(tweets)
 
@@ -125,7 +125,7 @@ barplot(pos,main="Sentiment Score",width = 0.05)
 
 # ---------------------- MOST RETWEETED TWEETS ------------------------
 
-selected <- which(tweets.df$retweetCount >= 15)
+selected <- which(tweets.df$retweetCount >= 20)
 # plot them
 dates <- strptime(tweets.df$created, format="%Y-%m-%d")
 
@@ -152,7 +152,14 @@ g <- simplify(g)
 
 V(g)$label <- V(g)$name
 V(g)$degree <- degree(g)
+V(g)$label.cex <- 2.2 * V(g)$degree / max(V(g)$degree)+ .2
+V(g)$label.color <- rgb(0, 0, .2, .8)
+V(g)$frame.color <- NA
+egam <- (log(E(g)$weight)+.4) / max(log(E(g)$weight)+.4)
+E(g)$color <- rgb(.5, .5, 0, egam)
+E(g)$width <- egam
 
 set.seed(3952)
 network <- layout.fruchterman.reingold(g)
-plot(main="Logical Relationship",g,layout=network)
+plot(main="Logical Relationship Map",g,layout=network)
+
