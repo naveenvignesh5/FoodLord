@@ -9,6 +9,17 @@ library(topicmodels)
 library(ggplot2)
 library(sentiment)
 library(igraph)
+#--------------------------- INPUT DATA -----------------------------
+#food items to be isolated
+
+foodItem <- c("chicken")
+foodItem1 <- c("naan")
+foodItem2 <- c("curri")
+
+#twitter parameters to be used
+searchString <- c("#indianfood","@worldfoodindia")
+no <- 3000
+lang <- "en"
 
 #---------------------------TWITTER CREDENTIALS----------------------
 apiKey <- 'OY9AlUG1fM49rytP7T8hqInoL'
@@ -19,13 +30,12 @@ access_token_secret <- 'CQ96GaCgeIFqq2XVPtigJnFVD9momtZqFBEsHpH8n7q3Z'
 #setting up twitter third party authentication
 setup_twitter_oauth(apiKey,apiSecret,access_token,access_token_secret)
 
-#------------------------TWITTER SEARCH PARAMETERS---------------------
-searchString <- c("#indianfood","@worldfoodindia")
-no <- 3000
-lang <- "en"
+#------------------------TWITTER SEARCH---------------------
+
 tweets <- searchTwitter(searchString,no,lang,since = "2017-10-01",until = "2017-10-07")
 
 tweets.df <- twListToDF(tweets)
+
 myCorpus <- Corpus(VectorSource(tweets.df$text)) #corpus for documents
 
 #----------------------- CLEANING THE TWEETS -------------------------
@@ -48,6 +58,17 @@ set.seed(1234)
 pal <- brewer.pal(9,"BuGn")[-(1:4)]
 wordcloud(words = d$word, freq = d$freq, min.freq = 5,max.words=200, random.order=FALSE, rot.per=0.35, colors=brewer.pal(8, "Dark2"))
 
+
+#------------------------TOPIC MODELING TO FIND MOST FREQUENT TWEETS---------------------------
+
+dtm <- as.DocumentTermMatrix(tdm)
+lda <- LDA(dtm,k=8)
+term <- terms(lda, 7) # first 7 terms of every topic
+topics <- topics(lda) # 1st topic identified for every document (tweet)
+topics <- data.frame(date=as.Date(tweets.df$created), topic=topics)
+
+ggplot(topics, aes(date, fill = term[topic])) +geom_density(position = "stack")
+
 #-----------------------SEGREGATION OF TWEETS --------------------
 
 f = list()
@@ -58,12 +79,6 @@ AddItemNaive <- function(item)
   .GlobalEnv$f[[length(.GlobalEnv$Result)+1]] <- item
 }
 
-#food items to be isolated
-
-foodItem <- c("chicken")
-foodItem1 <- c("naan")
-foodItem2 <- c("curri")
-
 #loop through each document
 for(i in 1:length(myCorpus)) {
   #condition to check if document matches content
@@ -71,24 +86,18 @@ for(i in 1:length(myCorpus)) {
   if((foodItem %in% temp1) | (foodItem1 %in% temp1) | (foodItem2 %in% temp1)) {
     #if satisfied add then add the text sentence to new corpus
     AddItemNaive(myCorpus[[i]]$content)
-    print(myCorpus[[i]]$content)
   }
   temp1 <- NULL
 }
 
-foodCorpus <- as.VCorpus(f) #corpus to used for sentiment analysis
+write.csv(f,file="seg.csv")
+df <- read.csv("seg.csv")
+foodCorpus <- Corpus(VectorSource(df)) #corpus to used for sentiment analysis
 
-print(foodCorpus)
-#------------------------TOPIC MODELING TO FIND MOST FREQUENT TWEETS---------------------------
-dtm <- as.DocumentTermMatrix(tdm)
-lda <- LDA(dtm,k=8)
-term <- terms(lda, 7) # first 7 terms of every topic
-topics <- topics(lda) # 1st topic identified for every document (tweet)
-topics <- data.frame(date=as.Date(tweets.df$created), topic=topics)
-
-ggplot(topics, aes(date, fill = term[topic])) +geom_density(position = "stack")
 
 #------------------SENTIMENT ANALYSIS----------------------
+
+# EVALUATION TWEETS FUNCTION
 
 sentiments <- sentiment(foodCorpus$content)
 print(foodCorpus$content)
@@ -98,10 +107,12 @@ table(sentiments$polarity)
 sentiments$score <- 0
 sentiments$score[sentiments$polarity == "positive"] <- 1
 sentiments$score[sentiments$polarity == "negative"] <- -1
-#result <- aggregate(score ~ date, data = sentiments, sum)
 
+barplot(sentiments$score,main="Sentiment Score of "+foodItem)
+# ----------------------- END OF SENTIMENT ANALYSIS ------------------------------
 
 # ----------------MOST RETWEETED TWEETS--------------------
+
 selected <- which(tweets.df$retweetCount >= 15)
 # plot them
 dates <- strptime(tweets.df$created, format="%Y-%m-%d")
@@ -115,16 +126,12 @@ points(dates[selected], tweets.df$retweetCount[selected],
 text(dates[selected], tweets.df$retweetCount[selected],
      tweets.df$text[selected], col=colors, cex=.9)
 
-#plot 2 
-#data = head(selected,dates)
-#ggplot(data,aes(x=Times-Retweeted,y=Date))+geom_point()+geom_text(label=tweets.df$retweetCount[selected],
- #                                                                 nudge_x = 0.25,nudge_y = 0.25,check_overlap = T)
 
 # ---------------------- ASSOCIATION OF TWEETS ------------------------
 
 #plot 1 - association
 m <- as.matrix(removeSparseTerms(tdm,.96))
-print(m)
+
 m[m>=1] <- 1
 m <- m %*% t(m)
 
