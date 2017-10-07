@@ -1,4 +1,5 @@
 #------------------------- IMPORTING LIBRARIES ---------------------------
+
 library(wordcloud)
 library(twitteR)
 library(ROAuth)
@@ -9,7 +10,9 @@ library(topicmodels)
 library(ggplot2)
 library(sentiment)
 library(igraph)
+
 #--------------------------- INPUT DATA -----------------------------
+
 #food items to be isolated
 
 foodItem <- c("chicken")
@@ -17,17 +20,19 @@ foodItem1 <- c("naan")
 foodItem2 <- c("curri")
 
 #twitter parameters to be used
-searchString <- c("#indianfood","@worldfoodindia")
+searchString <- c("#indianfood",foodItem,foodItem1,foodItem2)
 no <- 3000
 lang <- "en"
 
 #---------------------------TWITTER CREDENTIALS----------------------
+
 apiKey <- 'OY9AlUG1fM49rytP7T8hqInoL'
 apiSecret <- 'cjKBprKRaZoUUvwPUv7MX3NeRCehn8dSs9vBOwGjsbvAXBjI9s'
 access_token <- '2195494530-V7csBiOqiffi69fZuhkZEqMRZO5xqHHWcSiBl9V'
 access_token_secret <- 'CQ96GaCgeIFqq2XVPtigJnFVD9momtZqFBEsHpH8n7q3Z'
 
 #setting up twitter third party authentication
+
 setup_twitter_oauth(apiKey,apiSecret,access_token,access_token_secret)
 
 #------------------------TWITTER SEARCH---------------------
@@ -47,6 +52,7 @@ myCorpus <- tm_map(myCorpus, removeWords, c("like", "video"))
 myCorpus <- tm_map(myCorpus, stripWhitespace)
 myCorpus <- tm_map(myCorpus, stemDocument)
 
+
 # ---------------------- WORD CLOUD GENERATION OF FREQUENT TWEETS----------------
 
 tdm <- TermDocumentMatrix(myCorpus)
@@ -58,7 +64,11 @@ set.seed(1234)
 pal <- brewer.pal(9,"BuGn")[-(1:4)]
 wordcloud(words = d$word, freq = d$freq, min.freq = 5,max.words=200, random.order=FALSE, rot.per=0.35, colors=brewer.pal(8, "Dark2"))
 
-
+#------------------------ TWEETS FREQUENCY GENERATION -------------------
+term.freq <- rowSums(as.matrix(tdm))
+term.freq <- subset(term.freq,term.freq >= 20)
+df1 <-  data.frame(term = names(term.freq),freq = term.freq)
+ggplot(df1, aes(x=term, y=freq)) + geom_bar(stat="identity") + xlab("Terms") + ylab("Count") + coord_flip() + theme(axis.text=element_text(size=7))
 #------------------------TOPIC MODELING TO FIND MOST FREQUENT TWEETS---------------------------
 
 dtm <- as.DocumentTermMatrix(tdm)
@@ -69,7 +79,7 @@ topics <- data.frame(date=as.Date(tweets.df$created), topic=topics)
 
 ggplot(topics, aes(date, fill = term[topic])) +geom_density(position = "stack")
 
-#-----------------------SEGREGATION OF TWEETS --------------------
+#----------------------- SEGREGATION OF TWEETS --------------------
 
 f = list()
 
@@ -79,6 +89,7 @@ AddItemNaive <- function(item)
   .GlobalEnv$f[[length(.GlobalEnv$Result)+1]] <- item
 }
 
+k <- 1;
 #loop through each document
 for(i in 1:length(myCorpus)) {
   #condition to check if document matches content
@@ -86,14 +97,14 @@ for(i in 1:length(myCorpus)) {
   if((foodItem %in% temp1) | (foodItem1 %in% temp1) | (foodItem2 %in% temp1)) {
     #if satisfied add then add the text sentence to new corpus
     AddItemNaive(myCorpus[[i]]$content)
+    f[[k]] <- myCorpus[[i]]$content
+    k <- k + 1
   }
   temp1 <- NULL
 }
 
-write.csv(f,file="seg.csv")
-df <- read.csv("seg.csv")
-foodCorpus <- Corpus(VectorSource(df)) #corpus to used for sentiment analysis
 
+foodCorpus <- as.VCorpus(f)
 
 #------------------SENTIMENT ANALYSIS----------------------
 
@@ -108,17 +119,18 @@ sentiments$score <- 0
 sentiments$score[sentiments$polarity == "positive"] <- 1
 sentiments$score[sentiments$polarity == "negative"] <- -1
 
-barplot(sentiments$score,main="Sentiment Score of "+foodItem)
+pos <- sum(sentiments$score)
+barplot(pos,main="Sentiment Score",width = 0.05)
 # ----------------------- END OF SENTIMENT ANALYSIS ------------------------------
 
-# ----------------MOST RETWEETED TWEETS--------------------
+# ---------------------- MOST RETWEETED TWEETS ------------------------
 
 selected <- which(tweets.df$retweetCount >= 15)
 # plot them
 dates <- strptime(tweets.df$created, format="%Y-%m-%d")
 
 #plot 1 for twitter data
-plot(x=dates, y=tweets.df$retweetCount, type="l", col="grey",
+plot(main="Most Frequent Tweets",x=dates, y=tweets.df$retweetCount, type="l", col="grey",
      xlab="Date", ylab="Times retweeted")
 colors <- rainbow(10)[1:length(selected)]
 points(dates[selected], tweets.df$retweetCount[selected],
@@ -143,5 +155,4 @@ V(g)$degree <- degree(g)
 
 set.seed(3952)
 network <- layout.fruchterman.reingold(g)
-plot(g,layout=network)
-
+plot(main="Logical Relationship",g,layout=network)

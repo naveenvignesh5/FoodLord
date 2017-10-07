@@ -21,7 +21,7 @@ setup_twitter_oauth(apiKey,apiSecret,access_token,access_token_secret)
 #######
 # Step 2: Download the Followers of a Given Twitter Account
 #######
-lucaspuente <- getUser("naveen_theace56")
+lucaspuente <- getUser("realDonaldTrump")
 #See this user's location:
 location(lucaspuente)
 #Download data on this user's followers:
@@ -50,7 +50,7 @@ source("https://raw.githubusercontent.com/LucasPuente/geocoding/master/geocode_h
 source("https://raw.githubusercontent.com/LucasPuente/geocoding/master/modified_geocode.R")
 #Generate specific geocode function:
 geocode_apply<-function(x){
-  geocode(x, source = "google", output = "all", api_key="[INSERT YOUR GOOGLE API KEY HERE]")
+  geocode(x, source = "google", output = "all", api_key="AIzaSyBU17aNuvWOASbAA73_IL1k7fD61unG2Ds")
 }
 #Apply this new function to entire list:
 geocode_results<-sapply(lucaspuente_followers_df$location, geocode_apply, simplify = F)
