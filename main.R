@@ -58,13 +58,17 @@ AddItemNaive <- function(item)
   .GlobalEnv$f[[length(.GlobalEnv$Result)+1]] <- item
 }
 
-#food item to be isolated
-foodItem <- c("naan")
+#food items to be isolated
+
+foodItem <- c("chicken")
+foodItem1 <- c("naan")
+foodItem2 <- c("curri")
+
 #loop through each document
 for(i in 1:length(myCorpus)) {
   #condition to check if document matches content
   temp1 <- unlist(strsplit(toString(myCorpus[[i]]$content),split=" "))
-  if((foodItem %in% temp1) || (foodItem %in% temp1)) {
+  if((foodItem %in% temp1) | (foodItem1 %in% temp1) | (foodItem2 %in% temp1)) {
     #if satisfied add then add the text sentence to new corpus
     AddItemNaive(myCorpus[[i]]$content)
     print(myCorpus[[i]]$content)
@@ -75,7 +79,7 @@ for(i in 1:length(myCorpus)) {
 foodCorpus <- as.VCorpus(f) #corpus to used for sentiment analysis
 
 print(foodCorpus)
-#topic modelling terms part
+#------------------------TOPIC MODELING TO FIND MOST FREQUENT TWEETS---------------------------
 dtm <- as.DocumentTermMatrix(tdm)
 lda <- LDA(dtm,k=8)
 term <- terms(lda, 7) # first 7 terms of every topic
@@ -85,6 +89,7 @@ topics <- data.frame(date=as.Date(tweets.df$created), topic=topics)
 ggplot(topics, aes(date, fill = term[topic])) +geom_density(position = "stack")
 
 #------------------SENTIMENT ANALYSIS----------------------
+
 sentiments <- sentiment(foodCorpus$content)
 print(foodCorpus$content)
 
